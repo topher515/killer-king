@@ -6,13 +6,16 @@ var
   UUID            = require('node-uuid'),
   io              = require('socket.io')(http),
   _               = require('lodash'),
+  p2              = require('p2'),
+  kkphys          = require('./phys.js'),
   verbose         = false
 
 ;
 
 
 
-var players = {};
+var playerDatas = {};
+
 
 
 app.get( '/', function( req, res ){ 
@@ -39,46 +42,60 @@ http.listen(4004, function(){
 
 
 
+
+
+
+
+var level = new kkphys.Level();
+
+
+
 io.on('connection', function (client) {
   
-  var playerId = _.uniqueId();
 
-  client.playerId = playerId;
+  var player = new Player({ id:_.uniqueIq(), position:[50, 60] })
 
-  players[playerId] = { 
-    id: playerId
-  }
+
+  console.log('\t Player ' + player.id + ' connected');
 
     //tell the player they connected, giving them their id
-  client.emit('onconnected', { id: client.playerId } );
-
-    //Useful to know when someone connects
-  console.log('\t socket.io:: player ' + playerId + ' connected');
+  client.emit('onconnected', player.serialize());
   
-  // When this client disconnects
   client.on('disconnect', function () {
-      //Useful to know when someone disconnects
-    console.log('\t socket.io:: client disconnected ' + playerId );
+    console.log('\t Player ' + player.id + ' quit');
+
+    player.destroy();
+
+    io.sockets.emit('quit.player', { id: player.id });
 
   }); 
 
-  client.on('mystate', function(data) {
+  client.on('action', function(data) {
     
-    _.extend(players[playerId], data);
+    player.doAction(data);
 
   });
 
 }); 
 
 
+
+
+// Calc phyics
+setInterval(function() {
+  kkphys.world.step(10/60);
+
+}, 100);
+
+
+// Emit world state
 setInterval(function() {
 
   io.sockets.emit('perception', {
-    isPartial: false,
-    players: players,
-  })
+    players: _.map(players, function(p) { return p.serialize(); } ,
+  });
 
-}, 50);
+}, 250);
 
 
 

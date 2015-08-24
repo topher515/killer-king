@@ -1,0 +1,17 @@
+{
+  "name": "killer-king",
+  "version": "0.0.1",
+  "authors": [
+    "Chris Wilcox <ckwilcox@gmail.com>"
+  ],
+  "description": "Kill those kinds",
+  "main": "server.js",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
